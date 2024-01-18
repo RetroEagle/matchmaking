@@ -10,10 +10,16 @@ class Playoffs(Tournament):
     pass
 
 class Continous(Tournament):
-    def __init__(self, stage_limit=-1):
+    def __init__(self, match_maker, stage_limit=-1):
         self.stages = []
         self.stage_limit = stage_limit
+        self.match_maker = match_maker
+        self.stage_limit = stage_limit
         
+    def run(self, players):
+        for stage in range(self.stage_limit):
+            matches = self.match_maker.find(players, state=stage)
+            print(matches)
 
 class Game:
     def __init__(self, tournamnet, players=None):
@@ -38,6 +44,5 @@ class Game:
     
     def run(self):
         self.print_ranks()
+        self.tournament.run(self.players)
         
-        mm = MatchMaker(self.players)
-        matches = mm.find()

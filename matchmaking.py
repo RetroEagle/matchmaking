@@ -1,3 +1,5 @@
+import random
+
 class Rank:
     """
     additive:
@@ -29,7 +31,12 @@ class Match:
         self.teams = teams
         
     def __print__(self):
-        return ""
+        cutoff = 2 if len(self.teams[0]) == 1 else 1    
+        printStr = "|" + str(self.teams[0])[1:-cutoff]
+        for team in self.teams[1:]:
+            printStr += " vs " + str(team)[1:-cutoff]
+        
+        return printStr + "|"
             
     def __repr__(self):
         return self.__print__()
@@ -56,8 +63,8 @@ class MatchMaker:
         amount of teams that play in one match
       
     """
-    def __init__(self, players, replacement=True, weighted=True, biased=True, dynamic=True, team_size=1, opponents=2):
-        self.players = players
+    def __init__(self, replacement=True, weighted=True, biased=True, dynamic=True, team_size=1, opponents=2):
+        # self.players = players
         # self.matches = matches
         
         self.replacement = replacement
@@ -67,26 +74,29 @@ class MatchMaker:
         self.team_size = team_size
         self.opponents = opponents
         
-    def find(self, restrictions=None):
+    def find(self, players, state=0, restrictions=None):
         """
         out:
             list of matches: [Match]
         """
-        hash = sum([sum([(ord(c)**2 + 1) // 2 for c in p.name])**2 for p in self.players]) // len(self.players)
+        seed = random.Random(str([p.name for p in players]) + str(state)).getrandbits(48)
+        
         restrictions = restrictions or []
         # TODO: resolve this mess
-        # neat implementation: DFS to avoid any livelocks
+        # neat implementation: DFS (Backtracking) to avoid any livelocks. AC3 would be faster but total overkill
+        # for now, just ignore restrictions
         restrictions = [sorted([sorted(team) for team in match]) for match in restrictions]
         
-        temp_players = self.players
+        temp_players = list(players)
                 
         # find teammates
         teams = []
         while len(temp_players) > 0:
             team = ()
             while len(team) < self.team_size:
-                hash = hash * 3 + 1
-                team += (temp_players.pop(hash % len(temp_players)),)
+                # seed = seed * 3 + 1
+                seed = random.Random(str(seed)).getrandbits(48)
+                team += (temp_players.pop(seed % len(temp_players)),)
             teams.append(team)
         
         
@@ -95,9 +105,8 @@ class MatchMaker:
         while len(teams) > 0:
             _match = ()
             while len(_match) < self.opponents:
-                hash = hash * 3 + 1
-                _match += (teams.pop(hash % len(teams)),)
-            print(_match)
+                seed = random.Random(str(seed)).getrandbits(48)
+                _match += (teams.pop(seed % len(teams)),)
             matches.append(Match(_match))
             
-        # print(matches)
+        return matches
